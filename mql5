@@ -1,0 +1,120 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                                CandleStick 3 Candle Engulf |
+//|                                   https://www.forexroboteasy.com |
+//|                                               Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+
+#property copyright 'Forex Robot Easy Team'
+#property link      'https://www.forexroboteasy.com'
+#property version   '1.00'
+#property strict
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    //--- indicator buffers mapping
+    SetIndexBuffer(0, BullsBuffer);
+    SetIndexBuffer(1, BearsBuffer);
+
+    //--- set indicator line
+    SetIndexStyle(0, DRAW_LINE);
+    SetIndexStyle(1, DRAW_LINE);
+
+    //--- set indicator labels
+    IndicatorDigits(Digits);
+    SetIndexLabel(0, 'Bullish Engulf');
+    SetIndexLabel(1, 'Bearish Engulf');
+
+    //--- initialize indicator buffers
+    ArrayInitialize(BullsBuffer, EMPTY_VALUE);
+    ArrayInitialize(BearsBuffer, EMPTY_VALUE);
+
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+{
+    //--- check for bars count
+    if(rates_total < 4)
+        return(0);
+
+    //--- main loop
+    for(int i = 3; i < rates_total; i++)
+    {
+        //--- check for bullish engulfing pattern
+        if(IsBullishEngulf(open, close, i))
+        {
+            BullsBuffer[i] = high[i];
+        }
+        else
+        {
+            BullsBuffer[i] = EMPTY_VALUE;
+        }
+
+        //--- check for bearish engulfing pattern
+        if(IsBearishEngulf(open, close, i))
+        {
+            BearsBuffer[i] = low[i];
+        }
+        else
+        {
+            BearsBuffer[i] = EMPTY_VALUE;
+        }
+    }
+
+    //--- return value of prev_calculated for next call
+    return(rates_total);
+}
+
+//+------------------------------------------------------------------+
+//| Function to check for bullish engulfing pattern                  |
+//+------------------------------------------------------------------+
+bool IsBullishEngulf(const double &open[],
+                     const double &close[],
+                     const int index)
+{
+    if(close[index - 2] < open[index - 2] &&
+       close[index - 1] < open[index - 1] &&
+       close[index] > open[index] &&
+       close[index] > close[index - 1] &&
+       open[index] < open[index - 1])
+    {
+        return(true);
+    }
+
+    return(false);
+}
+
+//+------------------------------------------------------------------+
+//| Function to check for bearish engulfing pattern                  |
+//+------------------------------------------------------------------+
+bool IsBearishEngulf(const double &open[],
+                     const double &close[],
+                     const int index)
+{
+    if(close[index - 2] > open[index - 2] &&
+       close[index - 1] > open[index - 1] &&
+       close[index] < open[index] &&
+       close[index] < close[index - 1] &&
+       open[index] > open[index - 1])
+    {
+        return(true);
+    }
+
+    return(false);
+}
